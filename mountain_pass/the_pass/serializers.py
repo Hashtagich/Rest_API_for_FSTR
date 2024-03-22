@@ -36,3 +36,10 @@ class PerevalSerializer(serializers.ModelSerializer):
         model = Pereval
         fields = ['beauty_title', 'title', 'other_titles', 'connect', 'add_time',
                   'user', 'coords', 'level', 'images', 'status']
+
+    def create(self, validated_data):
+        images_data = validated_data.pop('data')
+        perevel = Pereval.objects.create(**validated_data)
+        for image_data in images_data:
+            Images.objects.create(perevel=perevel, **image_data)
+        return perevel
