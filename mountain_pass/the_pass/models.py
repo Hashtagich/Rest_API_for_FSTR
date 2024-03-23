@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser
 from django.core.validators import RegexValidator
+from .services import get_path_upload_photo
 
 
 # Create your models here.
@@ -78,7 +79,7 @@ class Level(models.Model):
 
 class Images(models.Model):
     title = models.CharField(max_length=255)
-    data = models.ImageField(upload_to='photos/%Y/%m/%d/', null=True)
+    data = models.ImageField(upload_to=get_path_upload_photo, null=True)
     date_added = models.DateTimeField(auto_now_add=True)
     pereval = models.ForeignKey('Pereval', on_delete=models.CASCADE, related_name='images')
 
