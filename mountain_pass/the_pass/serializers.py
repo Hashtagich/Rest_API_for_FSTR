@@ -1,4 +1,4 @@
-from .models import Coord, Level, Pereval, Images, User
+from .models import Coord, Level, Pereval, Images, MyUser
 from rest_framework import serializers
 
 
@@ -16,6 +16,7 @@ class LevelSerializer(serializers.ModelSerializer):
 
 class ImagesSerializer(serializers.ModelSerializer):
     data = serializers.URLField()
+
     class Meta:
         model = Images
         fields = ['data', 'title']
@@ -23,7 +24,7 @@ class ImagesSerializer(serializers.ModelSerializer):
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
+        model = MyUser
         fields = ['email', 'fam', 'name', 'otc', 'phone']
 
 
@@ -39,28 +40,27 @@ class PerevalSerializer(serializers.ModelSerializer):
                   'user', 'coords', 'level', 'images']
 
     def create(self, validated_data):
-        user = validated_data.pop('user')
-        coords = validated_data.pop('coords')
-        level = validated_data.pop('level')
-        images = validated_data.pop('images')
+        user_data = validated_data.pop('user')
+        coords_data = validated_data.pop('coords')
+        level_data = validated_data.pop('level')
+        images_data = validated_data.pop('images')
 
-        pass_user = User.objects.filter(email=user['email'])
+        pass_user = MyUser.objects.filter(email=user_data['email'])
 
         if pass_user.exists():
-            user_ser = UserSerializer(data=user)
+            user_ser = UserSerializer(data=user_data)
             user = user_ser.save()
         else:
-            user = User.objects.create(**user)
+            user = MyUser.objects.create(**user_data)
 
-        coords = Coord.objects.create(**coords)
-        level = Level.objects.create(**level)
+        coords = Coord.objects.create(**coords_data)
+        level = Level.objects.create(**level_data)
 
-        pereval = Pereval.objects.create(**validated_data, user=user, coords=coords, level=level)
+        pereval = Pereval.objects.create(user=user, coords=coords, level=level, **validated_data)
 
-        for i in images:
+        for i in images_data:
             data = i.pop('data')
             title = i.pop('title')
             Images.objects.create(data=data, pereval=pereval, title=title)
 
         return pereval
-
