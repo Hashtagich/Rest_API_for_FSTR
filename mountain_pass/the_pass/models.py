@@ -8,11 +8,11 @@ check_number = RegexValidator(regex=r'^\+\d{11}$',
 
 
 class MyUser(models.Model):
-    name = models.CharField(max_length=50)
-    fam = models.CharField(max_length=50)
-    otc = models.CharField(max_length=50)
-    phone = models.CharField(validators=[check_number], max_length=12, blank=True)
-    email = models.EmailField(max_length=100, unique=True)
+    name = models.CharField(max_length=150)
+    fam = models.CharField(max_length=150)
+    otc = models.CharField(max_length=150)
+    phone = models.CharField(validators=[check_number], max_length=15, blank=True)
+    email = models.EmailField(max_length=200, unique=True)
 
     USERNAME_FIELD = 'email'
     EMAIL_FIELD = 'email'
@@ -65,7 +65,7 @@ class Pereval(models.Model):
     other_titles = models.CharField(max_length=255)
     connect = models.TextField()
     add_time = models.DateTimeField(auto_now_add=True)
-    status = models.CharField(max_length=20, choices=CHOICE_STATUS, default="new")
+    status = models.CharField(max_length=30, choices=CHOICE_STATUS, default="new")
     user = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='user')
     coords = models.OneToOneField(Coord, on_delete=models.CASCADE)
     level = models.ForeignKey(Level, on_delete=models.CASCADE)
