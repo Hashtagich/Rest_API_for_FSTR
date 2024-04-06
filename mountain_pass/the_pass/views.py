@@ -1,38 +1,36 @@
+from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.response import Response
-from rest_framework.decorators import action
-from rest_framework import status
-# from .models import *
-from .serializers import *
+from .models import MyUser, Coord, Level, Images, Pereval
+from .serializers import CoordSerializer, UserSerializer, LevelSerializer, ImagesSerializer, PerevalSerializer
 
 
 # Create your views here.
-class UserViewset(viewsets.ModelViewSet):
+class UserViewSet(viewsets.ModelViewSet):
     queryset = MyUser.objects.all()
     serializer_class = UserSerializer
 
 
-class CoordsViewset(viewsets.ModelViewSet):
+class CoordsViewSet(viewsets.ModelViewSet):
     queryset = Coord.objects.all()
     serializer_class = CoordSerializer
 
 
-class LevelViewset(viewsets.ModelViewSet):
+class LevelViewSet(viewsets.ModelViewSet):
     queryset = Level.objects.all()
     serializer_class = LevelSerializer
 
 
-class ImageViewset(viewsets.ModelViewSet):
+class ImageViewSet(viewsets.ModelViewSet):
     queryset = Images.objects.all()
     serializer_class = ImagesSerializer
 
 
-class PerevalViewset(viewsets.ModelViewSet):
+class PerevalViewSet(viewsets.ModelViewSet):
     queryset = Pereval.objects.all()
     serializer_class = PerevalSerializer
 
-    @action(detail=False, methods=['post'])
-    def submitData(self, request):
+    def create(self, request, *args, **kwargs):
         data = request.data
 
         try:
@@ -56,7 +54,7 @@ class PerevalViewset(viewsets.ModelViewSet):
                     'user': user_instance.id,
                     'coords': coords_instance.id,
                     'level': level_instance.id,
-                    **data  # Remaining data
+                    **data
                 }
 
                 pereval_serializer = PerevalSerializer(data=pereval_data)

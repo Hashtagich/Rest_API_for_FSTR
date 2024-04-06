@@ -23,12 +23,30 @@ class ImagesSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    def save(self, **kwargs):
+        self.is_valid()
+        user = MyUser.objects.filter(email=self.validated_data.get['email'])
+        if user.exists():
+            return user.first()
+        else:
+            new_user = MyUser.objects.create(
+                name=self.validated_data['name'],
+                fam=self.validated_data['fam'],
+                otc=self.validated_data['otc'],
+                phone=self.validated_data['phone'],
+                email=self.validated_data['email']
+            )
+            new_user.save()
+            return new_user
+
     class Meta:
         model = MyUser
         fields = ['email', 'fam', 'name', 'otc', 'phone']
 
 
 class PerevalSerializer(serializers.ModelSerializer):
+    add_time = serializers.DateTimeField(format='%d-%m-%Y %H:%M:%S', read_only=True)
+    status = serializers.CharField(read_only=True)
     user = UserSerializer()
     coords = CoordSerializer()
     level = LevelSerializer()
@@ -37,7 +55,7 @@ class PerevalSerializer(serializers.ModelSerializer):
     class Meta:
         model = Pereval
         fields = ['beauty_title', 'title', 'other_titles', 'connect', 'add_time',
-                  'user', 'coords', 'level', 'images']
+                  'user', 'coords', 'level', 'images', 'status']
 
     def create(self, validated_data):
         user_data = validated_data.pop('user')
@@ -45,14 +63,7 @@ class PerevalSerializer(serializers.ModelSerializer):
         level_data = validated_data.pop('level')
         images_data = validated_data.pop('images')
 
-        pass_user = MyUser.objects.filter(email=user_data['email'])
-
-        if pass_user.exists():
-            user_ser = UserSerializer(data=user_data)
-            user = user_ser.save()
-        else:
-            user = MyUser.objects.create(**user_data)
-
+        user = MyUser.objects.create(**user_data)
         coords = Coord.objects.create(**coords_data)
         level = Level.objects.create(**level_data)
 
