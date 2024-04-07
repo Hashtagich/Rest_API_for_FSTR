@@ -25,7 +25,7 @@ class ImagesSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     def save(self, **kwargs):
         self.is_valid()
-        user = MyUser.objects.filter(email=self.validated_data.get['email'])
+        user = MyUser.objects.filter(email=self.validated_data.get('email'))
         if user.exists():
             return user.first()
         else:
