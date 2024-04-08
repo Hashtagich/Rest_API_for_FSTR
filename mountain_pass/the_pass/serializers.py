@@ -30,13 +30,12 @@ class UserSerializer(serializers.ModelSerializer):
             return user.first()
         else:
             new_user = MyUser.objects.create(
-                name=self.validated_data['name'],
-                fam=self.validated_data['fam'],
-                otc=self.validated_data['otc'],
-                phone=self.validated_data['phone'],
-                email=self.validated_data['email']
+                fam=self.validated_data.get('fam'),
+                name=self.validated_data.get('name'),
+                otc=self.validated_data.get('otc'),
+                phone=self.validated_data.get('phone'),
+                email=self.validated_data.get('email'),
             )
-            new_user.save()
             return new_user
 
     class Meta:
@@ -58,20 +57,29 @@ class PerevalSerializer(serializers.ModelSerializer):
                   'user', 'coords', 'level', 'images', 'status']
 
     def create(self, validated_data):
-        user_data = validated_data.pop('user')
-        coords_data = validated_data.pop('coords')
-        level_data = validated_data.pop('level')
-        images_data = validated_data.pop('images')
+        user = validated_data.pop('user')
+        coords = validated_data.pop('coords')
+        images = validated_data.pop('images')
+        levels = validated_data.pop('level')
 
-        user = MyUser.objects.create(**user_data)
-        coords = Coord.objects.create(**coords_data)
-        level = Level.objects.create(**level_data)
+        current_user = MyUser.objects.filter(email=user['email'])
+        if current_user.exists():
+            user_serializers = UserSerializer(data=user)
+            user_serializers.is_valid(raise_exception=True)
+            user = user_serializers.save()
+        else:
+            user = MyUser.objects.create(**user)
 
-        pereval = Pereval.objects.create(user=user, coords=coords, level=level, **validated_data)
+        coords = Coord.objects.create(**coords)
+        levels = Level.objects.create(**levels)
+        pereval_new = Pereval.objects.create(**validated_data, user=user, coords=coords, level=levels)
 
-        for i in images_data:
-            data = i.pop('data')
-            title = i.pop('title')
-            Images.objects.create(data=data, pereval=pereval, title=title)
+        if images:
+            for img in images:
+                title = img.pop('title')
+                data = img.pop('data')
+                Images.objects.create(pereval=pereval_new, title=title, data=data)
 
-        return pereval
+        return pereval_new
+
+

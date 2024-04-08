@@ -23,6 +23,9 @@ class MyUser(models.Model):
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
 
+    def __str__(self):
+        return f'{self.email}_{self.name}_{self.fam}_{self.otc}'
+
 
 class Coord(models.Model):
     latitude = models.DecimalField(decimal_places=8, max_digits=10)
@@ -78,6 +81,9 @@ class Pereval(models.Model):
         verbose_name = "Перевал"
         verbose_name_plural = "Перевалы"
 
+    def __str__(self):
+        return f'{self.beauty_title}_{self.title}_{self.id}'
+
 
 class Images(models.Model):
     title = models.CharField(max_length=255)
@@ -89,3 +95,6 @@ class Images(models.Model):
     class Meta:
         verbose_name = "Изображение"
         verbose_name_plural = "Изображения"
+
+    def __str__(self):
+        return f'{self.title}'
