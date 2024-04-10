@@ -12,7 +12,7 @@ class MyUser(models.Model):
     fam = models.CharField(max_length=150)
     otc = models.CharField(max_length=150)
     phone = models.CharField(validators=[check_number], max_length=15, blank=True)
-    email = models.EmailField(max_length=200, unique=True)
+    email = models.EmailField(max_length=200)
     objects = models.Manager()
 
     USERNAME_FIELD = 'email'

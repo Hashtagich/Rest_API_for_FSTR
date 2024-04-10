@@ -97,4 +97,26 @@ class PerevalSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({'Данные пользователя не могут быть изменены'})
         return data
 
+    def update(self, instance, validated_data):
+        user_data = validated_data.pop('user', None)
+        coords_data = validated_data.pop('coords', None)
+        level_data = validated_data.pop('level', None)
+        images_data = validated_data.pop('images', None)
 
+        instance.beauty_title = validated_data.get('beauty_title', instance.beauty_title)
+        instance.title = validated_data.get('title', instance.title)
+
+        UserSerializer().update(instance.user, user_data)
+        CoordSerializer().update(instance.coords, coords_data)
+        LevelSerializer().update(instance.level, level_data)
+
+        for image_data in images_data:
+            image_id = image_data.get('id', None)
+            if image_id:
+                image_instance = Images.objects.get(id=image_id)
+                ImagesSerializer().update(image_instance, image_data)
+            else:
+                Images.objects.create(pereval=instance, **image_data)
+
+        instance.save()
+        return instance

@@ -9,5 +9,4 @@ router.register(r'submitData', views.PerevalViewSet, basename='submitData')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include(router.urls)),
-    path('submitData/', views.SubmitDataViewSet.as_view({'get': 'list'}), name='submit_data_list'),
 ]

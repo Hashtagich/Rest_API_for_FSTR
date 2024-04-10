@@ -1,3 +1,4 @@
+import django_filters
 from rest_framework import status, generics
 from rest_framework import viewsets
 from django.http import JsonResponse
@@ -34,7 +35,6 @@ class PerevalViewSet(viewsets.ModelViewSet):
     def create(self, request, *args, **kwargs):
         serializer = PerevalSerializer(data=request.data)
 
-        """Результаты метода: JSON"""
         if serializer.is_valid():
             serializer.save()
             return Response({
@@ -55,48 +55,20 @@ class PerevalViewSet(viewsets.ModelViewSet):
                 'id': None,
             })
 
-    def partial_update(self, request, *args, **kwargs):
-        pereval = self.get_object()
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.status != 'new':
+            return Response({'state': '0', 'message': 'Можно редактировать только записи со статусом "new"'})
 
-        new_email = request.data.get('user', {}).get('email')
-        if new_email:
-            existing_user = MyUser.objects.filter(email=new_email).exclude(pk=pereval.user.pk)
-            if existing_user.exists():
-                return Response({
-                    'state': '0',
-                    'message': "Пользователь с таким email уже существует."
-                })
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
 
-        serializer = PerevalSerializer(pereval, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({
-                'state': '1',
-                'message': 'Запись успешно изменена'
-            })
-        else:
-            return Response({
-                'state': '0',
-                'message': serializer.errors
-            })
+        return Response({'state': '1', 'message': 'Успешно удалось отредактировать запись в базе данных'})
 
-
-class SubmitDataViewSet(viewsets.ViewSet):
-    def list(self, request):
-        user_email = request.query_params.get('user__email', None)
-        if user_email:
-            user = MyUser.objects.filter(email=user_email).first()
-            if user:
-                data_objects = Pereval.objects.filter(user=user)
-                serializer = PerevalSerializer(data_objects, many=True)
-                return Response(serializer.data)
-            else:
-                return Response({
-                    'message': 'Пользователь с такой почтой не найден',
-                    'data': []
-                })
-        else:
-            return Response({
-                'message': 'Параметр user__email обязателен',
-                'data': []
-            })
+    def get_queryset(self):
+        queryset = Pereval.objects.all()
+        user = self.request.query_params.get('user__email', None)
+        if user is not None:
+            queryset = queryset.filter(user__email=user)
+        return queryset
