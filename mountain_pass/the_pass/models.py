@@ -12,7 +12,8 @@ class MyUser(models.Model):
     fam = models.CharField(max_length=150)
     otc = models.CharField(max_length=150)
     phone = models.CharField(validators=[check_number], max_length=15, blank=True)
-    email = models.EmailField(max_length=200, unique=True)
+    email = models.EmailField(max_length=200)
+    objects = models.Manager()
 
     USERNAME_FIELD = 'email'
     EMAIL_FIELD = 'email'
@@ -22,11 +23,15 @@ class MyUser(models.Model):
         verbose_name = "Пользователь"
         verbose_name_plural = "Пользователи"
 
+    def __str__(self):
+        return f'{self.email}_{self.name}_{self.fam}_{self.otc}'
+
 
 class Coord(models.Model):
     latitude = models.DecimalField(decimal_places=8, max_digits=10)
     longitude = models.DecimalField(decimal_places=8, max_digits=10)
     height = models.IntegerField(default=0)
+    objects = models.Manager()
 
     class Meta:
         verbose_name = "Координаты"
@@ -46,6 +51,7 @@ class Level(models.Model):
     summer = models.CharField(max_length=2, choices=CHOICE_LEVEL, default=" ")
     autumn = models.CharField(max_length=2, choices=CHOICE_LEVEL, default=" ")
     spring = models.CharField(max_length=2, choices=CHOICE_LEVEL, default=" ")
+    objects = models.Manager()
 
     class Meta:
         verbose_name = "Уровень сложности"
@@ -69,10 +75,14 @@ class Pereval(models.Model):
     user = models.ForeignKey(MyUser, on_delete=models.CASCADE, related_name='user')
     coords = models.OneToOneField(Coord, on_delete=models.CASCADE)
     level = models.ForeignKey(Level, on_delete=models.CASCADE)
+    objects = models.Manager()
 
     class Meta:
         verbose_name = "Перевал"
         verbose_name_plural = "Перевалы"
+
+    def __str__(self):
+        return f'{self.beauty_title}_{self.title}_{self.id}'
 
 
 class Images(models.Model):
@@ -80,7 +90,11 @@ class Images(models.Model):
     data = models.ImageField(upload_to=get_path_upload_photo, null=True)
     date_added = models.DateTimeField(auto_now_add=True)
     pereval = models.ForeignKey(Pereval, on_delete=models.CASCADE, related_name='images')
+    objects = models.Manager()
 
     class Meta:
         verbose_name = "Изображение"
         verbose_name_plural = "Изображения"
+
+    def __str__(self):
+        return f'{self.title}'

@@ -1,77 +1,74 @@
+import django_filters
+from rest_framework import status, generics
 from rest_framework import viewsets
+from django.http import JsonResponse
 from rest_framework.response import Response
-from rest_framework.decorators import action
-from rest_framework import status
-# from .models import *
-from .serializers import *
+from .models import MyUser, Coord, Level, Images, Pereval
+from .serializers import CoordSerializer, UserSerializer, LevelSerializer, ImagesSerializer, PerevalSerializer
 
 
 # Create your views here.
-class UserViewset(viewsets.ModelViewSet):
+class UserViewSet(viewsets.ModelViewSet):
     queryset = MyUser.objects.all()
     serializer_class = UserSerializer
 
 
-class CoordsViewset(viewsets.ModelViewSet):
+class CoordsViewSet(viewsets.ModelViewSet):
     queryset = Coord.objects.all()
     serializer_class = CoordSerializer
 
 
-class LevelViewset(viewsets.ModelViewSet):
+class LevelViewSet(viewsets.ModelViewSet):
     queryset = Level.objects.all()
     serializer_class = LevelSerializer
 
 
-class ImageViewset(viewsets.ModelViewSet):
+class ImageViewSet(viewsets.ModelViewSet):
     queryset = Images.objects.all()
     serializer_class = ImagesSerializer
 
 
-class PerevalViewset(viewsets.ModelViewSet):
+class PerevalViewSet(viewsets.ModelViewSet):
     queryset = Pereval.objects.all()
     serializer_class = PerevalSerializer
 
-    @action(detail=False, methods=['post'])
-    def submitData(self, request):
-        data = request.data
+    def create(self, request, *args, **kwargs):
+        serializer = PerevalSerializer(data=request.data)
 
-        try:
-            user_data = data.get('user')
-            coords_data = data.get('coords')
-            level_data = data.get('level')
-            images_data = data.get('images')
+        if serializer.is_valid():
+            serializer.save()
+            return Response({
+                'status': status.HTTP_200_OK,
+                'message': None,
+                'id': serializer.data,
+            })
+        if status.HTTP_400_BAD_REQUEST:
+            return Response({
+                'status': status.HTTP_400_BAD_REQUEST,
+                'message': 'Bad Request',
+                'id': None,
+            })
+        if status.HTTP_500_INTERNAL_SERVER_ERROR:
+            return Response({
+                'status': status.HTTP_500_INTERNAL_SERVER_ERROR,
+                'message': 'Ошибка подключения к базе данных',
+                'id': None,
+            })
 
-            user_serializer = UserSerializer(data=user_data)
-            coords_serializer = CoordSerializer(data=coords_data)
-            level_serializer = LevelSerializer(data=level_data)
-            images_serializers = [ImagesSerializer(data=image_data) for image_data in images_data]
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.status != 'new':
+            return Response({'state': '0', 'message': 'Можно редактировать только записи со статусом "new"'})
 
-            if user_serializer.is_valid() and coords_serializer.is_valid() and level_serializer.is_valid() and all(
-                    image_serializer.is_valid() for image_serializer in images_serializers):
-                user_instance = user_serializer.save()
-                coords_instance = coords_serializer.save()
-                level_instance = level_serializer.save()
+        serializer = self.get_serializer(instance, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
 
-                pereval_data = {
-                    'user': user_instance.id,
-                    'coords': coords_instance.id,
-                    'level': level_instance.id,
-                    **data  # Remaining data
-                }
+        return Response({'state': '1', 'message': 'Успешно удалось отредактировать запись в базе данных'})
 
-                pereval_serializer = PerevalSerializer(data=pereval_data)
-                if pereval_serializer.is_valid():
-                    pereval_instance = pereval_serializer.save()
-
-                    for image_serializer in images_serializers:
-                        image_serializer.save(pereval=pereval_instance)
-
-                    return Response({'status': 200, 'message': 'Отправлено успешно', 'id': pereval_instance.id},
-                                    status=status.HTTP_200_OK)
-            else:
-                return Response({'status': 400, 'message': 'Bad Request, недостаточно полей', 'id': None},
-                                status=status.HTTP_400_BAD_REQUEST)
-
-        except Exception as e:
-            return Response({'status': 500, 'message': str(e), 'id': None},
-                            status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    def get_queryset(self):
+        queryset = Pereval.objects.all()
+        user = self.request.query_params.get('user__email', None)
+        if user is not None:
+            queryset = queryset.filter(user__email=user)
+        return queryset
