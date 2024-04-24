@@ -1,7 +1,5 @@
-import django_filters
-from rest_framework import status, generics
+from rest_framework import status
 from rest_framework import viewsets
-from django.http import JsonResponse
 from rest_framework.response import Response
 from .models import MyUser, Coord, Level, Images, Pereval
 from .serializers import CoordSerializer, UserSerializer, LevelSerializer, ImagesSerializer, PerevalSerializer

@@ -53,7 +53,7 @@ class PerevalSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Pereval
-        fields = ['beauty_title', 'title', 'other_titles', 'connect', 'add_time',
+        fields = ['id', 'beauty_title', 'title', 'other_titles', 'connect', 'add_time',
                   'user', 'coords', 'level', 'images', 'status']
 
     def create(self, validated_data):
@@ -105,6 +105,8 @@ class PerevalSerializer(serializers.ModelSerializer):
 
         instance.beauty_title = validated_data.get('beauty_title', instance.beauty_title)
         instance.title = validated_data.get('title', instance.title)
+        instance.other_titles = validated_data.get('other_titles', instance.other_titles)
+        instance.connect = validated_data.get('connect', instance.connect)
 
         UserSerializer().update(instance.user, user_data)
         CoordSerializer().update(instance.coords, coords_data)
